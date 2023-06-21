@@ -22,10 +22,11 @@ const getUserById = (req, res) => {
       return res.status(200).send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Id not found' });
+      } else {
+        res.status(500).send({ message: 'Server Error' });
       }
-      return res.status(500).send({ message: 'Server Error' });
     });
 };
 
