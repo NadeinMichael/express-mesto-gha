@@ -9,7 +9,7 @@ const getCards = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -25,7 +25,7 @@ const createCard = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -41,7 +41,7 @@ const deleteCardById = (req, res) => {
       if (err.name === 'CastError') {
         res.status(400).send({ message: 'Id not found' });
       } else {
-        res.status(500).send({ message: 'Server Error' });
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -62,7 +62,7 @@ const likeCard = (req, res) => {
       if (err.name === 'CastError') {
         res.status(400).send({ message: 'Id not found' });
       } else {
-        res.status(500).send({ message: 'Server Error' });
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -83,7 +83,7 @@ const dislikeCard = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Id not found' });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 

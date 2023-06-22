@@ -8,7 +8,7 @@ const getUsers = (req, res) => {
       }
       return res.status(200).send(users);
     })
-    .catch(() => res.status(500).send({ message: 'Server Error' }));
+    .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
 };
 
 const getUserById = (req, res) => {
@@ -25,7 +25,7 @@ const getUserById = (req, res) => {
       if (err.name === 'CastError') {
         res.status(400).send({ message: 'Id not found' });
       } else {
-        res.status(500).send({ message: 'Server Error' });
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -41,7 +41,7 @@ const createUser = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -61,7 +61,7 @@ const editProfile = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -81,7 +81,7 @@ const editAvatar = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
       }
-      return res.status(500).send({ message: 'Server Error' });
+      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 

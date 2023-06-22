@@ -4,9 +4,9 @@ const mongoose = require('mongoose');
 
 const routes = require('./routes');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, connectAddress = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb').then(() => {
+mongoose.connect(connectAddress).then(() => {
   console.log('connected to bd');
 });
 
