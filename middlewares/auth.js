@@ -1,17 +1,21 @@
 const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const JWT_SECRET = 'unique-secret-key';
 
 function doesUserHavePermission(req, res, next) {
-  if (!req.headers.authorization) {
-    return res.status(401).send({ message: 'нет доступа' });
+  const { authorization } = req.headers;
+
+  if (!authorization) {
+    return next(new UnauthorizedError('Нет доступа'));
   }
 
+  const token = authorization.replace('Bearer ', '');
   let payload;
   try {
-    payload = jwt.verify(req.headers.authorization, JWT_SECRET);
+    payload = jwt.verify(token, JWT_SECRET);
   } catch (e) {
-    return res.status(401).send({ message: 'нет доступа' });
+    return next(new UnauthorizedError('Нет доступа'));
   }
   req.user = payload;
   return next();

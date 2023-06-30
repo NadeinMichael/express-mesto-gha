@@ -47,7 +47,7 @@ const createUser = (req, res, next) => {
     return next(new BadRequestError('Не передан Email или пароль'));
   }
 
-  return User.findOne({ email }).select('+password')
+  return User.findOne({ email })
     .then((user) => {
       if (user) {
         return next(new ConflictError('Пользователь с таким email уже существует'));
@@ -57,7 +57,13 @@ const createUser = (req, res, next) => {
         newUserData.password = hash;
         return User.create(newUserData)
           .then((newUser) => {
-            res.status(201).send(newUser);
+            res.status(201).send({
+              name: newUser.name,
+              about: newUser.about,
+              avatar: newUser.avatar,
+              email: newUser.email,
+              _id: newUser._id,
+            });
           });
       });
     })
