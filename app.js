@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const { celebrate, Joi } = require('celebrate');
+const { celebrate, Joi, errors } = require('celebrate');
 
 const routes = require('./routes');
 
@@ -35,6 +35,8 @@ app.post('/signup', celebrate({
 }), createUser);
 
 app.use(routes);
+
+app.use(errors());
 
 app.use(errorHandler);
 
