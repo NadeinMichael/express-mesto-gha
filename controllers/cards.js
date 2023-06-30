@@ -15,7 +15,7 @@ const getCards = (req, res) => {
 
 const createCard = (req, res) => {
   const newCardData = req.body;
-  newCardData.owner = req.user._id;
+  newCardData.owner = req.user.id;
 
   Card.create(newCardData)
     .then((newCard) => {
@@ -30,12 +30,18 @@ const createCard = (req, res) => {
 };
 
 const deleteCardById = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         return res.status(404).send({ message: 'Card not found' });
       }
-      return res.send({ data: card });
+      if (req.user.id !== card.owner.toString()) {
+        return res.status(401).send({ message: 'Нет прав на удаление данной карточки' });
+      }
+      return Card.findByIdAndRemove(req.params.cardId)
+        .then((deletedCard) => {
+          res.status(200).send({ data: deletedCard });
+        });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
