@@ -6,6 +6,7 @@ const { celebrate, Joi } = require('celebrate');
 const routes = require('./routes');
 
 const { login, createUser } = require('./controllers/users');
+const errorHandler = require('./middlewares/error-handler');
 
 const { PORT = 3000, connectAddress = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
@@ -34,6 +35,8 @@ app.post('/signup', celebrate({
 }), createUser);
 
 app.use(routes);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`server is running on port ${PORT}`);

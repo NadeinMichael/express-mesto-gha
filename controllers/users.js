@@ -2,51 +2,55 @@ const bcrypt = require('bcrypt');
 
 const User = require('../models/user');
 const { generateToken } = require('../utils/jwt');
+const BadRequestError = require('../errors/bad-request-error');
+const NotFoundError = require('../errors/not-found-error');
+const ConflictError = require('../errors/conflict-error');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const SALT_ROUNDS = 10;
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       if (!users) {
-        return res.status(404).send({ message: 'Users not found' });
+        return next(new NotFoundError('Users not found'));
       }
       return res.status(200).send(users);
     })
-    .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch((err) => next(err));
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+        return next(new NotFoundError('User not found'));
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Id not found' });
+        next(new BadRequestError('Id not found'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const newUserData = req.body;
   const { email, password } = newUserData;
 
   if (!email || !password) {
-    return res.status(400).send({ message: 'Не передан Email или пароль' });
+    return next(new BadRequestError('Не передан Email или пароль'));
   }
 
   return User.findOne({ email }).select('+password')
     .then((user) => {
       if (user) {
-        return res.status(409).send({ message: 'пользователь с таким Email уже существует' });
+        return next(new ConflictError('Пользователь с таким email уже существует'));
       }
 
       return bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
@@ -54,18 +58,19 @@ const createUser = (req, res) => {
         return User.create(newUserData)
           .then((newUser) => {
             res.status(201).send(newUser);
-          })
-          .catch((error) => {
-            if (error.name === 'ValidationError') {
-              return res.status(400).send({ message: `${Object.values(error.errors).map((e) => e.message).join('. ')}` });
-            }
-            return res.status(500).send({ message: 'На сервере произошла ошибка' });
           });
       });
+    })
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError({ message: `${Object.values(error.errors).map((e) => e.message).join('. ')}` }));
+      } else {
+        next(error);
+      }
     });
 };
 
-const editProfile = (req, res) => {
+const editProfile = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name: req.body.name, about: req.body.about }, {
     new: true,
     runValidators: true,
@@ -73,36 +78,37 @@ const editProfile = (req, res) => {
   })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+        return next(new NotFoundError('User not found'));
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
+        next(new BadRequestError({ message: `${Object.values(err.errors).map((e) => e.message).join('. ')}` }));
+      } else {
+        next(err);
       }
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
-const getMyInfo = (req, res) => {
+const getMyInfo = (req, res, next) => {
   User.findById(req.user.id)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+        return next(new NotFoundError('User not found'));
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Id not found' });
+        next(new BadRequestError('Id not found'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-const editAvatar = (req, res) => {
+const editAvatar = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, {
     new: true,
     runValidators: true,
@@ -110,43 +116,42 @@ const editAvatar = (req, res) => {
   })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+        return next(new NotFoundError('User not found'));
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` });
+        next(new BadRequestError({ message: `${Object.values(err.errors).map((e) => e.message).join('. ')}` }));
+      } else {
+        next(err);
       }
-      return res.status(500).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).send({ message: 'Не пераданы пароль или email' });
+    return next(new BadRequestError('Не передан Email или пароль'));
   }
 
   return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(401).send({ message: 'Неверные пароль или email' });
+        return next(new UnauthorizedError('Неверные пароль или email'));
       }
 
       return bcrypt.compare(password, user.password, (error, isPasswordMatch) => {
         if (!isPasswordMatch) {
-          return res.status(401).send({ message: 'Неверные пароли или email' });
+          return next(new UnauthorizedError('Неверные пароль или email'));
         }
 
         const token = generateToken(user._id);
         return res.status(200).send({ token });
       });
     })
-    .catch(() => {
-      res.status(500).send({ message: 'Ошибка сервера' });
-    });
+    .catch((err) => next(err));
 };
 
 module.exports = {
