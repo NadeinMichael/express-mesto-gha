@@ -43,10 +43,6 @@ const createUser = (req, res, next) => {
   const newUserData = req.body;
   const { email, password } = newUserData;
 
-  if (!email || !password) {
-    return next(new BadRequestError('Не передан Email или пароль'));
-  }
-
   return User.findOne({ email })
     .then(() => {
       bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
@@ -60,17 +56,20 @@ const createUser = (req, res, next) => {
               email: newUser.email,
               _id: newUser._id,
             });
+          })
+          .catch((error) => {
+            if (error.code === 11000) {
+              next(new ConflictError('Такой email уже есть в базе данных'));
+            }
           });
       });
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        next(new BadRequestError({ message: `${Object.values(error.errors).map((e) => e.message).join('. ')}` }));
-      } else if (error.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
-      } else {
-        next(error);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Не удалось создать пользователя'));
+        return;
       }
+      next(err);
     });
 };
 
