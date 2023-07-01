@@ -9,12 +9,7 @@ const getCards = (req, res, next) => {
     .then((cards) => {
       res.status(200).send(cards);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new BadRequestError({ message: `${Object.values(err.errors).map((error) => error.message).join('. ')}` }));
-      }
-      return next(err);
-    });
+    .catch((err) => next(err));
 };
 
 const createCard = (req, res, next) => {
@@ -42,7 +37,7 @@ const deleteCardById = (req, res, next) => {
       if (req.user.id !== card.owner.toString()) {
         return next(new ForbiddenError('Нет прав на удаление данной карточки'));
       }
-      return Card.findByIdAndRemove(req.params.cardId)
+      return card.deleteOne()
         .then((deletedCard) => {
           res.status(200).send({ data: deletedCard });
         });

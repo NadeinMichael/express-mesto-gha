@@ -4,8 +4,8 @@ const User = require('../models/user');
 const { generateToken } = require('../utils/jwt');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-error');
-const ConflictError = require('../errors/conflict-error');
 const UnauthorizedError = require('../errors/unauthorized-error');
+const ConflictError = require('../errors/conflict-error');
 
 const SALT_ROUNDS = 10;
 
@@ -48,12 +48,8 @@ const createUser = (req, res, next) => {
   }
 
   return User.findOne({ email })
-    .then((user) => {
-      if (user) {
-        return next(new ConflictError('Пользователь с таким email уже существует'));
-      }
-
-      return bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
+    .then(() => {
+      bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
         newUserData.password = hash;
         return User.create(newUserData)
           .then((newUser) => {
@@ -70,6 +66,8 @@ const createUser = (req, res, next) => {
     .catch((error) => {
       if (error.name === 'ValidationError') {
         next(new BadRequestError({ message: `${Object.values(error.errors).map((e) => e.message).join('. ')}` }));
+      } else if (error.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
       } else {
         next(error);
       }
@@ -80,7 +78,6 @@ const editProfile = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name: req.body.name, about: req.body.about }, {
     new: true,
     runValidators: true,
-    upsert: true,
   })
     .then((user) => {
       if (!user) {
@@ -105,20 +102,13 @@ const getMyInfo = (req, res, next) => {
       }
       return res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Id not found'));
-      } else {
-        next(err);
-      }
-    });
+    .catch((err) => next(err));
 };
 
 const editAvatar = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, {
     new: true,
     runValidators: true,
-    upsert: true,
   })
     .then((user) => {
       if (!user) {

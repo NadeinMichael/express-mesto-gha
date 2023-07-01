@@ -1,14 +1,19 @@
+// eslint-disable-next-line max-len
+// К сожалению, не разобрался с пунктом "Можно лучше" про рефакторинг с помощью функций-декораторов, но был бы презнателен если бы вы чуть более подробнее описали эту идею
 const express = require('express');
-const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const { celebrate, Joi, errors } = require('celebrate');
+const { errors } = require('celebrate');
+
+const { PORT = 3000, connectAddress = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
 const routes = require('./routes');
 
 const { login, createUser } = require('./controllers/users');
 const errorHandler = require('./middlewares/error-handler');
-
-const { PORT = 3000, connectAddress = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const {
+  validationSignup,
+  validationSignIn,
+} = require('./utils/validation');
 
 mongoose.connect(connectAddress).then(() => {
   console.log('connected to bd');
@@ -16,23 +21,10 @@ mongoose.connect(connectAddress).then(() => {
 
 const app = express();
 
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(6),
-  }),
-}), login);
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(6),
-    avatar: Joi.string().pattern(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/),
-  }),
-}), createUser);
+app.post('/signin', validationSignIn, login);
+app.post('/signup', validationSignup, createUser);
 
 app.use(routes);
 
