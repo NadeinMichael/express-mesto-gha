@@ -67,7 +67,7 @@ const createUser = (req, res, next) => {
 };
 
 const editProfile = (req, res, next) => {
-  User.findByIdAndUpdate(req.user._id, { name: req.body.name, about: req.body.about }, {
+  User.findByIdAndUpdate(req.user.id, { name: req.body.name, about: req.body.about }, {
     new: true,
     runValidators: true,
   })
@@ -98,7 +98,7 @@ const getMyInfo = (req, res, next) => {
 };
 
 const editAvatar = (req, res, next) => {
-  User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, {
+  User.findByIdAndUpdate(req.user.id, { avatar: req.body.avatar }, {
     new: true,
     runValidators: true,
   })
