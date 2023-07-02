@@ -40,34 +40,27 @@ const getUserById = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
-  const newUserData = req.body;
-  const { email, password } = newUserData;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
-  return User.findOne({ email })
-    .then(() => {
-      bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
-        newUserData.password = hash;
-        return User.create(newUserData)
-          .then((newUser) => {
-            res.status(201).send({
-              name: newUser.name,
-              about: newUser.about,
-              avatar: newUser.avatar,
-              email: newUser.email,
-              _id: newUser._id,
-            });
-          })
-          .catch((error) => {
-            if (error.code === 11000) {
-              next(new ConflictError('Такой email уже есть в базе данных'));
-            }
-          });
+  bcrypt.hash(password, SALT_ROUNDS)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((newUser) => {
+      const { _id } = newUser;
+      res.send({
+        name: newUser.name, about: newUser.about, avatar: newUser.avatar, _id, email,
       });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Не удалось создать пользователя'));
         return;
+      }
+      if (err.code === 11000) {
+        next(new ConflictError('Такой email уже есть в базе данных'));
       }
       next(err);
     });
