@@ -57,12 +57,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Не удалось создать пользователя'));
-        return;
-      }
-      if (err.code === 11000) {
+      } else if (err.code === 11000) {
         next(new ConflictError('Такой email уже есть в базе данных'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

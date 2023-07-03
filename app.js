@@ -1,5 +1,3 @@
-// eslint-disable-next-line max-len
-// К сожалению, не разобрался с пунктом "Можно лучше" про рефакторинг с помощью функций-декораторов, но был бы презнателен если бы вы чуть более подробнее описали эту идею
 const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
